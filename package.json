@@ -1,0 +1,41 @@
+{
+    "name": "goog-amd",
+    "version": "0.1.0",
+    "description": "An AMD plugin that loads arbitrary things from the Google Loader. See: https://developers.google.com/loader/",
+    "author": "Joshua Newman <joshua.l.newman@gmail.com>",
+    "keywords": [
+        "amd",
+        "amd-plugin",
+        "goog",
+        "google maps"
+    ],
+    "licenses": [
+        {
+            "type": "BSD3",
+            "url": "https://github.com/jnewman/goog-amd/blob/master/LICENSE.txt"
+        }
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git@github.com:jnewman/goog-amd.git"
+    },
+    "main": "./dist/goog-amd",
+    "scripts": {
+        "dist": "grunt dist",
+        "lint": "grunt jshint",
+        "test": "grunt test"
+    },
+    "devDependencies": {
+        "chai": "~1.5",
+        "grunt": ">=0.4",
+        "grunt-contrib-concat": "~0.2",
+        "grunt-contrib-connect": "~0.3",
+        "grunt-contrib-jshint": "~0.4",
+        "grunt-contrib-uglify": "~0.2",
+        "grunt-mocha-phantomjs": "~0.2",
+        "jshint": "~1.1",
+        "lodash": "~1.1",
+        "mocha": "~1.9",
+        "requirejs": "~2.1"
+    }
+}

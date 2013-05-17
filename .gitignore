@@ -1,3 +1,4 @@
+# Useless output files.
 lib-cov
 *.seed
 *.log
@@ -7,8 +8,15 @@ lib-cov
 *.pid
 *.gz
 
+# Ignorable Node stuff
 pids
 logs
 results
 
+# NPM
 npm-debug.log
+node_modules
+
+# Editors
+.idea
+*~
