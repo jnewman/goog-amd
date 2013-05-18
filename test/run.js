@@ -7,7 +7,7 @@ require({
         'chai': '../node_modules/chai/chai',
         'lodash': '../node_modules/lodash/lodash',
         'mocha': '../node_modules/mocha/mocha',
-        'src': '../src',
+        'goog': '../src/goog',
         'test': '.'
     },
 
