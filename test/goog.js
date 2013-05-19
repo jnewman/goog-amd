@@ -12,7 +12,6 @@ define([
 
     describe('Internal utilities', function () {
         // Only testing features I rely on.
-
         var RANGE = 32;
         var TYPE_EXAMPLES = {
             array: [0, 1, 2],
@@ -123,8 +122,10 @@ define([
         describe('#_jsonParse', function () {
             it('parses JSON objects', function () {
                 expect(
-                    goog._jsonParse('{"foo": 42, "bar": {"baz": 99}}').bar
-                ).to.have.property('baz');
+                    goog._jsonParse('{"foo": 42, "bar": {"baz": 99}}')
+                ).to.deep.equal(
+                    {foo: 42, bar: {baz: 99}}
+                );
             });
         });
     });

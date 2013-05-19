@@ -11,14 +11,25 @@ define((function (global) {
         var slice = aProto.slice;
 
         // Creating thse context free to enable delelgation to natives later on.
+
+        /**
+         * @param {*} thing
+         * @returns {boolean} Whether it's a function.
+         */
         var isFunction = function (thing) {
             return typeof thing === 'function';
         };
 
+        /**
+         * @param {Function} func
+         * @param {Object} [context]
+         * @param {*...} [args]
+         * @returns {Function}
+         */
         var bind = function (func, context, args) {
             args = slice.call(arguments, 2);
             return function () {
-                return func.apply(context, args.concat(slice.call(arguments, 0)));
+                return func.apply(context || null, args.concat(slice.call(arguments, 0)));
             };
         };
 
@@ -32,8 +43,88 @@ define((function (global) {
              */
             load: function (name, localRequire, notify) {
                 var params = this._parse(name);
-                var extend = bind(this._extend, this);
+                this._fetch(localRequire, params, notify);
+            },
 
+            ///////////////////////////////////////////////////////////////////////////////////////
+            // App specfic.
+            ///////////////////////////////////////////////////////////////////////////////////////
+
+            /**
+             * Equivalent to getattr in Python.
+             *
+             * @param {Object} config The context to lookup the prop on.
+             * @param {string} name The property to lookup.
+             * @param {*} [otherwise=null] Value to return if the jey is not found.
+             * @returns {*} The prop's value or otherwise
+             * @private
+             */
+            _getPart: function (config, name, otherwise) {
+                var parts = config.split(/(:|,)/),
+                    value;
+
+                if (this._contains(parts, name)) {
+                    value = parts[this._indexOf(parts, name) + 2];
+                    if (/^\{.*\}$/.test(value)) {
+                        // A bit of hackery to support JSON.
+                        value = config.split(name + ':')[1];
+                        value = value.replace(/([^\}]+)\}.{0,}$/, '$1}');
+                        value = this._jsonParse(value);
+                    }
+
+                    // We'll have key : value, so the value will be 2 after the key.
+                    return value;
+                }
+                else if (otherwise !== 'undefined') {
+                    return otherwise;
+                }
+                else {
+                    return null;
+                }
+            },
+
+            /**
+             * Converts name:maps,version:3.7,other_params:sensor=false
+             *
+             * @param {string} path
+             * @returns {{
+             *     moduleName: string,
+             *     version: string,
+             *     settings: {
+             *         language: string,
+             *         nocss: boolean,
+             *         packages: Array,
+             *         other_params: Object
+             *     }
+             * }} The configuration.
+             * @private
+             */
+            _parse: function (path) {
+                var getP = bind(this._getPart, this, path);
+
+                return {
+                    moduleName: getP('moduleName', getP('name')),
+                    version: getP('version'),
+                    settings: {
+                        language: getP('language', 'eng'),
+                        nocss: getP('nocss', true),
+                        packages: getP('packages', []),
+                        other_params: getP('other_params', {})
+                    }
+                };
+            },
+
+
+            /**
+             * Does the actual IO.
+             *
+             * @param {Function} localRequire
+             * @param {Object} params
+             * @param {Function} notify
+             * @private
+             */
+            _fetch: function (localRequire, params, notify) {
+                var extend = bind(this._extend, this);
                 localRequire(['https://www.google.com/jsapi'], function () {
                     google.load(params.moduleName, params.version, extend(params.settings, {
                         callback: function () {
@@ -42,6 +133,10 @@ define((function (global) {
                     }));
                 });
             },
+
+            ///////////////////////////////////////////////////////////////////////////////////////
+            // Prollyfills
+            ///////////////////////////////////////////////////////////////////////////////////////
 
             _bind: bind,
 
@@ -69,30 +164,6 @@ define((function (global) {
                 return target;
             },
 
-            _getPart: function (config, name, otherwise) {
-                var parts = config.split(/(:|,)/),
-                    value;
-
-                if (this._contains(parts, name)) {
-                    value = parts[this._indexOf(parts, name) + 2];
-                    if (/^\{.*\}$/.test(value)) {
-                        // A bit of hackery to support JSON.
-                        value = config.split(name + ':')[1];
-                        value = value.replace(/([^\}]+)\}.{0,}$/, '$1}');
-                        value = this._jsonParse(value);
-                    }
-
-                    // We'll have key : value, so the value will be 2 after the key.
-                    return value;
-                }
-                else if (otherwise !== 'undefined') {
-                    return otherwise;
-                }
-                else {
-                    throw new Error('Couldn\'t find your piece.');
-                }
-            },
-
             _indexOf: function (array, item) {
                 if (isFunction(aProto.indexOf)) {
                     return aProto.indexOf.call(array, item);
@@ -116,22 +187,7 @@ define((function (global) {
                 bind(JSON.parse, JSON) :
                 function (json) {
                     return eval('(' + json + ')');
-                },
-
-            _parse: function (path) {
-                var getP = bind(this._getPart, this, path);
-
-                return {
-                    moduleName: getP('moduleName', getP('name')),
-                    version: getP('version'),
-                    settings: {
-                        language: getP('language', 'eng'),
-                        nocss: getP('nocss', true),
-                        packages: getP('packages', []),
-                        other_params: getP('other_params', {})
-                    }
-                };
-            }
+                }
         };
     };
 })(this));
