@@ -27,7 +27,7 @@ define((function (global) {
              * @see {@link Loader Plugins|https://github.com/amdjs/amdjs-api/wiki/Loader-Plugins}
              *
              * @param {string} name The library to load
-             * @param {Function} localRequire A context aware require function (per AMD plugin spec).
+             * @param {Function} localRequire A context aware require function.
              * @param {Function} notify A function to call once we've completed loading.
              */
             load: function (name, localRequire, notify) {
@@ -56,6 +56,11 @@ define((function (global) {
             },
 
             _extend: function (target, src) {
+                target = target || {};
+                if (!src) {
+                    return target;
+                }
+
                 for (var key in src) {
                     if (src.hasOwnProperty(key)) {
                         target[key] = src[key];
