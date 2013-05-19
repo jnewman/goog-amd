@@ -33,6 +33,8 @@ define((function (global) {
             };
         };
 
+        var googLoaded = false;
+
         return {
             /**
              * @see {@link Loader Plugins|https://github.com/amdjs/amdjs-api/wiki/Loader-Plugins}
@@ -40,14 +42,19 @@ define((function (global) {
              * @param {string} name The library to load
              * @param {Function} localRequire A context aware require function.
              * @param {Function} notify A function to call once we've completed loading.
+             * @param {Object} config
              */
-            load: function (name, localRequire, notify) {
+            load: function (name, localRequire, notify, config) {
+                if (config.isBuild) {
+                    notify({});
+                }
+
                 var params = this._parse(name);
                 this._fetch(localRequire, params, notify);
             },
 
             ///////////////////////////////////////////////////////////////////////////////////////
-            // App specfic.
+            // App specific.
             ///////////////////////////////////////////////////////////////////////////////////////
 
             /**
@@ -65,15 +72,8 @@ define((function (global) {
 
                 if (this._contains(parts, name)) {
                     value = parts[this._indexOf(parts, name) + 2];
-                    if (/^\{.*\}$/.test(value)) {
-                        // A bit of hackery to support JSON.
-                        value = config.split(name + ':')[1];
-                        value = value.replace(/([^\}]+)\}.{0,}$/, '$1}');
-                        value = this._jsonParse(value);
-                    }
-
                     // We'll have key : value, so the value will be 2 after the key.
-                    return value;
+                    return this._jsonParse(value);
                 }
                 else if (otherwise !== 'undefined') {
                     return otherwise;
@@ -124,14 +124,21 @@ define((function (global) {
              * @private
              */
             _fetch: function (localRequire, params, notify) {
-                var extend = bind(this._extend, this);
-                localRequire(['https://www.google.com/jsapi'], function () {
-                    google.load(params.moduleName, params.version, extend(params.settings, {
-                        callback: function () {
-                            notify(global.google);
-                        }
-                    }));
-                });
+                var load = bind(this._googLoad, this, params, notify);
+                if (!googLoaded) {
+                    localRequire(['https://www.google.com/jsapi'], load);
+                }
+                else {
+                    load();
+                }
+            },
+
+            _googLoad: function (params, notify) {
+                google.load(params.moduleName, params.version, this._extend(params.settings, {
+                    callback: function () {
+                        notify(global.google[params.moduleName]);
+                    }
+                }));
             },
 
             ///////////////////////////////////////////////////////////////////////////////////////
@@ -165,12 +172,12 @@ define((function (global) {
             },
 
             _indexOf: function (array, item) {
-                if (isFunction(aProto.indexOf)) {
-                    return aProto.indexOf.call(array, item);
+                if (typeof array === 'string') {
+                    return array.indexOf(item);
                 }
 
-                if (typeof array === 'string') {
-                    array = array.split('');
+                if (isFunction(aProto.indexOf)) {
+                    return aProto.indexOf.call(array, item);
                 }
 
                 for (var i = 0, len = array.length; i < len; ++i) {
