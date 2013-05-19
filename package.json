@@ -1,6 +1,6 @@
 {
     "name": "goog-amd",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "An AMD plugin that loads arbitrary things from the Google Loader. See: https://developers.google.com/loader/",
     "author": "Joshua Newman <joshua.l.newman@gmail.com>",
     "keywords": [
