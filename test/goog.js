@@ -118,18 +118,41 @@ define([
                 expect(goog._indexOf('Hello, World!', 'W')).to.equal(7);
             });
         });
-
-        describe('#_jsonParse', function () {
-            it('parses JSON objects', function () {
-                expect(
-                    goog._jsonParse('{"foo": 42, "bar": {"baz": 99}}')
-                ).to.deep.equal(
-                    {foo: 42, bar: {baz: 99}}
-                );
-            });
-        });
     });
 
     describe('The goog AMD loader.', function () {
+        var googNoFetch = null;
+        var params = null;
+        var testConfig = [
+            'name:"maps"',
+            'version:"3.13"',
+            'language:"eng"',
+            'nocss:true',
+            'packages:[]',
+            'other_params:"sensor=false"'
+        ].join(',');
+
+        beforeEach(function () {
+            googNoFetch = _.extend({}, goog, {
+                _fetch: function (req, pars) {
+                    params = pars;
+                }
+            });
+        });
+
+        describe('#_parse', function () {
+            it('can convert a config object into JSON', function () {
+                expect(googNoFetch._parse(testConfig)).to.deep.equal({
+                    moduleName: 'maps',
+                    version: '3.13',
+                    settings: {
+                        language: 'eng',
+                        nocss: true,
+                        packages: [],
+                        other_params: 'sensor=false'
+                    }
+                });
+            });
+        });
     });
 });
