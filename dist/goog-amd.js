@@ -49,7 +49,17 @@ define((function (global) {
                     notify({});
                 }
 
-                var params = this._parse(name);
+                var params = null;
+                // If it's a simple string, then we'll look everything up from the require config.
+                if (/^[^:,"]+$/i.test(name)) {
+                    params = config.goog[name];
+                    if (!params.moduleName) {
+                        params.moduleName = params.name || name;
+                    }
+                } else {
+                    params = this._parse(name);
+                }
+
                 this._fetch(localRequire, params, notify);
             },
 
@@ -60,7 +70,7 @@ define((function (global) {
             /**
              * Equivalent to getattr in Python.
              *
-             * @param {Object} config The context to lookup the prop on.
+             * @param {string} config The context to lookup the prop on.
              * @param {string} name The property to lookup.
              * @param {*} [otherwise=null] Value to return if the jey is not found.
              * @returns {*} The prop's value or otherwise
