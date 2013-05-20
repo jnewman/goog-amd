@@ -121,7 +121,7 @@ define([
     });
 
     describe('The goog AMD loader.', function () {
-        var googNoFetch = null;
+        var googOrigFetch = null;
         var params = null;
         var testConfig = [
             'name:"maps"',
@@ -133,16 +133,21 @@ define([
         ].join(',');
 
         beforeEach(function () {
-            googNoFetch = _.extend({}, goog, {
-                _fetch: function (req, pars) {
-                    params = pars;
-                }
-            });
+            googOrigFetch = goog._fetch;
+            goog._fetch = function (req, pars, notify) {
+                params = pars;
+                notify();
+            };
+        });
+
+        afterEach(function () {
+            goog._fetch = googOrigFetch;
+            params = null;
         });
 
         describe('#_parse', function () {
             it('can convert a config object into JSON', function () {
-                expect(googNoFetch._parse(testConfig)).to.deep.equal({
+                expect(goog._parse(testConfig)).to.deep.equal({
                     moduleName: 'maps',
                     version: '3.13',
                     settings: {
@@ -151,6 +156,35 @@ define([
                         packages: [],
                         other_params: 'sensor=false'
                     }
+                });
+            });
+
+            it('can load a config from the require config', function (done) {
+                // Not actually gonna load due to _fetch override.
+                require(['goog!maps'], function (maps) {
+                    expect(params).to.deep.equal({
+                        moduleName: 'maps',
+                        version: '3.12',
+                        settings: {
+                            other_params: 'sensor=false'
+                        }
+                    });
+                    done();
+                });
+            });
+
+            it('allows aliasing from the require config', function (done) {
+                // Not actually gonna load due to _fetch override.
+                require(['goog!viz'], function (maps) {
+                    expect(params).to.deep.equal({
+                        name: 'visualization',
+                        moduleName: 'visualization',
+                        version: '1.0',
+                        settings: {
+                            packages: ['charteditor']
+                        }
+                    });
+                    done();
                 });
             });
         });
