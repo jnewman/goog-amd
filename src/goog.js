@@ -4,6 +4,8 @@ define((function (global) {
     'use strict';
 
     return function () {
+        var SUPPORTED = ['Dojo', 'RequireJS'];
+
         // I'm going to steal methods from Array.
         var aProto = Array.prototype;
 
@@ -45,10 +47,43 @@ define((function (global) {
              * @param {Object} config
              */
             load: function (name, localRequire, notify, config) {
-                if (config.isBuild) {
+                var fetch = bind(this._fetch, this, localRequire, notify);
+                var getParamsByConfig = bind(this._getParams, this, name);
+
+                var configExists = !!config;
+
+                if (configExists && config.isBuild) {
                     notify({});
                 }
+                // It's not a build and I can get the params sync.
+                else if (configExists) {
+                    fetch(getParamsByConfig(config));
+                }
+                // I need to fish around for the config and maybe the params.
+                else {
+                    this._getConfigThenFetch(localRequire, fetch, getParamsByConfig);
+                }
 
+
+            },
+
+            ///////////////////////////////////////////////////////////////////////////////////////
+            // App specific.
+            ///////////////////////////////////////////////////////////////////////////////////////
+
+            _getConfigThenFetch: function (localRequire, fetch, getParams) {
+                try {
+                    localRequire(['dojo/_base/config'], bind(function (config) {
+                        if (config.goog) {
+                            fetch(getParams(config.goog));
+                        }
+                    }, this));
+                } catch (e) {
+                    throw new Error('Unknown loader, should be one of:' + SUPPORTED.join(','));
+                }
+            },
+
+            _getParams: function (name, config) {
                 var params = null;
                 // If it's a simple string, then we'll look everything up from the require config.
                 if (/^[^:,"]+$/i.test(name)) {
@@ -59,13 +94,8 @@ define((function (global) {
                 } else {
                     params = this._parse(name);
                 }
-
-                this._fetch(localRequire, params, notify);
+                return params;
             },
-
-            ///////////////////////////////////////////////////////////////////////////////////////
-            // App specific.
-            ///////////////////////////////////////////////////////////////////////////////////////
 
             /**
              * Equivalent to getattr in Python.
@@ -92,6 +122,7 @@ define((function (global) {
                     return null;
                 }
             },
+
 
             /**
              * Converts name:maps,version:3.7,other_params:sensor=false
@@ -124,16 +155,15 @@ define((function (global) {
                 };
             },
 
-
             /**
              * Does the actual IO.
              *
              * @param {Function} localRequire
-             * @param {Object} params
              * @param {Function} notify
+             * @param {Object} params
              * @private
              */
-            _fetch: function (localRequire, params, notify) {
+            _fetch: function (localRequire, notify, params) {
                 var load = bind(this._googLoad, this, params, notify);
                 if (!googLoaded) {
                     localRequire(['https://www.google.com/jsapi'], load);

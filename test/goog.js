@@ -134,7 +134,7 @@ define([
 
         beforeEach(function () {
             googOrigFetch = goog._fetch;
-            goog._fetch = function (req, pars, notify) {
+            goog._fetch = function (req, notify, pars) {
                 params = pars;
                 notify();
             };
