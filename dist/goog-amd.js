@@ -37,7 +37,7 @@ define((function (global) {
 
         var googLoaded = false;
 
-        return {
+        var plugin = {
             /**
              * @see {@link Loader Plugins|https://github.com/amdjs/amdjs-api/wiki/Loader-Plugins}
              *
@@ -63,8 +63,6 @@ define((function (global) {
                 else {
                     this._getConfigThenFetch(localRequire, fetch, getParamsByConfig);
                 }
-
-
             },
 
             ///////////////////////////////////////////////////////////////////////////////////////
@@ -74,9 +72,7 @@ define((function (global) {
             _getConfigThenFetch: function (localRequire, fetch, getParams) {
                 try {
                     localRequire(['dojo/_base/config'], bind(function (config) {
-                        if (config.goog) {
-                            fetch(getParams(config.goog));
-                        }
+                        fetch(getParams(config.goog ? config : {}));
                     }, this));
                 } catch (e) {
                     throw new Error('Unknown loader, should be one of:' + SUPPORTED.join(','));
@@ -236,5 +232,10 @@ define((function (global) {
                     return eval('(' + json + ')');
                 }
         };
+
+        // Dojo calls the plugin in the laoder's context, so bind it to it's own context.
+        plugin.load = bind(plugin.load, plugin);
+
+        return plugin;
     };
 })(this));

@@ -32,6 +32,27 @@ Configure in your require config (or inline, documented below):
         }
     });
 
+Or if you're using dojo (could also go in data-dojo-config):
+
+    // goog! will look up the config on this module, it doens't matter how it gets there.
+    require(['dojo/_base/config'], function (config) {
+        config.goog = {
+            maps: {
+                version: '3.12',
+                settings:{
+                    other_params: 'sensor=false'
+                }
+            },
+            viz: {
+                name: 'visualization',
+                version: '1.0',
+                settings: {
+                    packages: ['charteditor']
+                }
+            }
+        };
+    });
+
 Then load your libraries:
 
     require([
@@ -56,6 +77,3 @@ Or configure everything inline:
     });
 
 Profit!?
-
-
-
