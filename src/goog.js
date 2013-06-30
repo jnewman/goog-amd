@@ -37,7 +37,7 @@ define((function (global) {
 
         var googLoaded = false;
 
-        return {
+        var plugin = {
             /**
              * @see {@link Loader Plugins|https://github.com/amdjs/amdjs-api/wiki/Loader-Plugins}
              *
@@ -63,8 +63,6 @@ define((function (global) {
                 else {
                     this._getConfigThenFetch(localRequire, fetch, getParamsByConfig);
                 }
-
-
             },
 
             ///////////////////////////////////////////////////////////////////////////////////////
@@ -236,5 +234,10 @@ define((function (global) {
                     return eval('(' + json + ')');
                 }
         };
+
+        // Dojo calls the plugin in the laoder's context, so bind it to it's own context.
+        plugin.load = bind(plugin.load, plugin);
+
+        return plugin;
     };
 })(this));
