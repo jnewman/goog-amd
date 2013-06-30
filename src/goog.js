@@ -72,7 +72,7 @@ define((function (global) {
             _getConfigThenFetch: function (localRequire, fetch, getParams) {
                 try {
                     localRequire(['dojo/_base/config'], bind(function (config) {
-                        fetch(getParams(config.goog || {}));
+                        fetch(getParams(config.goog ? config : {}));
                     }, this));
                 } catch (e) {
                     throw new Error('Unknown loader, should be one of:' + SUPPORTED.join(','));
